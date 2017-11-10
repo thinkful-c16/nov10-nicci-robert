@@ -67,6 +67,51 @@ const PAGE = {
   }
 };
 
+const EventHandler = {
+  // Event handler functions
+  // =======================
+
+  handleStartQuiz: function() {
+    store = getInitialStore();
+    store.page = 'question';
+    store.currentQuestionIndex = 0;
+    const quantity = parseInt($('#js-question-quantity').find(':selected').val(), 10);
+    fetchAndSeedQuestions(quantity, { type: 'multiple' }, () => {
+      PAGE.render();
+    });
+  },
+
+  handleSubmitAnswer: function(e) {
+    e.preventDefault();
+    const question = getCurrentQuestion();
+    const selected = $('input:checked').val();
+    store.userAnswers.push(selected);
+    
+    if (selected === question.correctAnswer) {
+      store.feedback = 'You got it!';
+    } else {
+      store.feedback = `Too bad! The correct answer was: ${question.correctAnswer}`;
+    }
+
+    store.page = 'answer';
+    PAGE.render();
+  },
+
+  handleNextQuestion: function() {
+    if (store.currentQuestionIndex === QUESTIONS.length - 1) {
+      store.page = 'outro';
+      PAGE.render();
+      return;
+    }
+    store.currentQuestionIndex++;
+    store.page = 'question';
+    PAGE.render();
+  }
+};
+
+
+
+
 const TOP_LEVEL_COMPONENTS = [
   'js-intro', 'js-question', 'js-question-feedback', 
   'js-outro', 'js-quiz-status'
@@ -256,45 +301,45 @@ const generateFeedbackHtml = function(feedback) {
 //   }
 // };
 
-// Event handler functions
-// =======================
-const handleStartQuiz = function() {
-  store = getInitialStore();
-  store.page = 'question';
-  store.currentQuestionIndex = 0;
-  const quantity = parseInt($('#js-question-quantity').find(':selected').val(), 10);
-  fetchAndSeedQuestions(quantity, { type: 'multiple' }, () => {
-    PAGE.render();
-  });
-};
+// // Event handler functions
+// // =======================
+// const handleStartQuiz = function() {
+//   store = getInitialStore();
+//   store.page = 'question';
+//   store.currentQuestionIndex = 0;
+//   const quantity = parseInt($('#js-question-quantity').find(':selected').val(), 10);
+//   fetchAndSeedQuestions(quantity, { type: 'multiple' }, () => {
+//     PAGE.render();
+//   });
+// };
 
-const handleSubmitAnswer = function(e) {
-  e.preventDefault();
-  const question = getCurrentQuestion();
-  const selected = $('input:checked').val();
-  store.userAnswers.push(selected);
+// const handleSubmitAnswer = function(e) {
+//   e.preventDefault();
+//   const question = getCurrentQuestion();
+//   const selected = $('input:checked').val();
+//   store.userAnswers.push(selected);
   
-  if (selected === question.correctAnswer) {
-    store.feedback = 'You got it!';
-  } else {
-    store.feedback = `Too bad! The correct answer was: ${question.correctAnswer}`;
-  }
+//   if (selected === question.correctAnswer) {
+//     store.feedback = 'You got it!';
+//   } else {
+//     store.feedback = `Too bad! The correct answer was: ${question.correctAnswer}`;
+//   }
 
-  store.page = 'answer';
-  PAGE.render();
-};
+//   store.page = 'answer';
+//   PAGE.render();
+// };
 
-const handleNextQuestion = function() {
-  if (store.currentQuestionIndex === QUESTIONS.length - 1) {
-    store.page = 'outro';
-    PAGE.render();
-    return;
-  }
+// const handleNextQuestion = function() {
+//   if (store.currentQuestionIndex === QUESTIONS.length - 1) {
+//     store.page = 'outro';
+//     PAGE.render();
+//     return;
+//   }
 
-  store.currentQuestionIndex++;
-  store.page = 'question';
-  PAGE.render();
-};
+//   store.currentQuestionIndex++;
+//   store.page = 'question';
+//   PAGE.render();
+// };
 
 // On DOM Ready, run render() and add event listeners
 $(() => {
@@ -306,7 +351,7 @@ $(() => {
     $('.js-start').attr('disabled', false);
   });
 
-  $('.js-intro, .js-outro').on('click', '.js-start', handleStartQuiz);
-  $('.js-question').on('submit', handleSubmitAnswer);
-  $('.js-question-feedback').on('click', '.js-continue', handleNextQuestion);
+  $('.js-intro, .js-outro').on('click', '.js-start', EventHandler.handleStartQuiz);
+  $('.js-question').on('submit', EventHandler.handleSubmitAnswer);
+  $('.js-question-feedback').on('click', '.js-continue', EventHandler.handleNextQuestion);
 });
