@@ -36,14 +36,22 @@ const API = {
   } //line 53
 };
 
-const PAGE = {
 // Render function - uses `store` object to construct entire page every time it's run
-// ===============
-  render: function() {
-    console.log('Inside the render function.');
-    hideAll();
+const PAGE = {
+  TOP_LEVEL_COMPONENTS: [
+    'js-intro', 'js-question', 'js-question-feedback', 
+    'js-outro', 'js-quiz-status'
+  ],
 
-    const question = getCurrentQuestion();
+  hideAll: function() {
+    PAGE.TOP_LEVEL_COMPONENTS.forEach(component => $(`.${component}`).hide());
+  },
+
+  render: function() {
+    //console.log('Inside the render function.');
+    this.hideAll();
+
+    const question = Question.getCurrentQuestion();
     const { feedback } = store; 
     const { current, total } = getProgress();
 
@@ -56,15 +64,14 @@ const PAGE = {
       break;
       
     case 'question':
-      this.html = generateQuestionHtml(question);
+      this.html = this.generateQuestionHtml(question);
       $('.js-question').html(this.html);
-      console.log(this.html);
       $('.js-question').show();
       $('.quiz-status').show();
       break;
 
     case 'answer':
-      this.html = generateFeedbackHtml(feedback);
+      this.html = this.generateFeedbackHtml(feedback);
       $('.js-question-feedback').html(this.html);
       $('.js-question-feedback').show();
       $('.quiz-status').show();
@@ -78,6 +85,40 @@ const PAGE = {
     default:
       return;
     }
+  },
+
+  generateQuestionHtml: function(question) {
+    const answers = question.answers
+      .map((answer, index) => this.generateAnswerItemHtml(answer, index))
+      .join('');
+  
+    return `
+      <form>
+        <fieldset>
+          <legend class="question-text">${question.text}</legend>
+            ${answers}
+            <button type="submit">Submit</button>
+        </fieldset>
+      </form>
+    `;
+  },
+
+  generateAnswerItemHtml: function(answer) {
+    return `
+      <li class="answer-item">
+        <input type="radio" name="answers" value="${answer}" />
+        <span class="answer-text">${answer}</span>
+      </li>
+    `;
+  },
+
+  generateFeedbackHtml: function(feedback) {
+    return `
+      <p>
+        ${feedback}
+      </p>
+      <button class="continue js-continue">Continue</button>
+    `;
   }
 };
 
@@ -104,6 +145,14 @@ const Question = {
       answers: [ ...question.incorrect_answers, question.correct_answer ],
       correctAnswer: question.correct_answer
     };
+  },
+
+  getCurrentQuestion: function() {
+    return QUESTIONS[store.currentQuestionIndex];
+  },
+  
+  getQuestion: function(index) {
+    return QUESTIONS[index];
   }
 };
 
@@ -123,7 +172,7 @@ const EventHandler = {
 
   handleSubmitAnswer: function(e) {
     e.preventDefault();
-    const question = getCurrentQuestion();
+    const question = Question.getCurrentQuestion();
     const selected = $('input:checked').val();
     store.userAnswers.push(selected);
     
@@ -152,10 +201,10 @@ const EventHandler = {
 
 
 
-const TOP_LEVEL_COMPONENTS = [
-  'js-intro', 'js-question', 'js-question-feedback', 
-  'js-outro', 'js-quiz-status'
-];
+// const TOP_LEVEL_COMPONENTS = [
+//   'js-intro', 'js-question', 'js-question-feedback', 
+//   'js-outro', 'js-quiz-status'
+// ];
 
 let QUESTIONS = [];
 
@@ -177,9 +226,9 @@ let store = getInitialStore();
 
 // Helper functions
 // ===============
-const hideAll = function() {
-  TOP_LEVEL_COMPONENTS.forEach(component => $(`.${component}`).hide());
-};
+// const hideAll = function() {
+//   PAGE.TOP_LEVEL_COMPONENTS.forEach(component => $(`.${component}`).hide());
+// };
 
 // const buildBaseUrl = function(amt = 10, query = {}) {
 //   const url = new URL(API.BASE_API_URL + '/api.php');
@@ -239,7 +288,7 @@ const hideAll = function() {
 
 const getScore = function() {
   return store.userAnswers.reduce((accumulator, userAnswer, index) => {
-    const question = getQuestion(index);
+    const question = Question.getQuestion(index);
 
     if (question.correctAnswer === userAnswer) {
       return accumulator + 1;
@@ -256,49 +305,49 @@ const getProgress = function() {
   };
 };
 
-const getCurrentQuestion = function() {
-  return QUESTIONS[store.currentQuestionIndex];
-};
+// const getCurrentQuestion = function() {
+//   return QUESTIONS[store.currentQuestionIndex];
+// };
 
-const getQuestion = function(index) {
-  return QUESTIONS[index];
-};
+// const getQuestion = function(index) {
+//   return QUESTIONS[index];
+// };
 
 // HTML generator functions
 // ========================
-const generateAnswerItemHtml = function(answer) {
-  return `
-    <li class="answer-item">
-      <input type="radio" name="answers" value="${answer}" />
-      <span class="answer-text">${answer}</span>
-    </li>
-  `;
-};
+// const generateAnswerItemHtml = function(answer) {
+//   return `
+//     <li class="answer-item">
+//       <input type="radio" name="answers" value="${answer}" />
+//       <span class="answer-text">${answer}</span>
+//     </li>
+//   `;
+// };
 
-const generateQuestionHtml = function(question) {
-  const answers = question.answers
-    .map((answer, index) => generateAnswerItemHtml(answer, index))
-    .join('');
+// const generateQuestionHtml = function(question) {
+//   const answers = question.answers
+//     .map((answer, index) => generateAnswerItemHtml(answer, index))
+//     .join('');
 
-  return `
-    <form>
-      <fieldset>
-        <legend class="question-text">${question.text}</legend>
-          ${answers}
-          <button type="submit">Submit</button>
-      </fieldset>
-    </form>
-  `;
-};
+//   return `
+//     <form>
+//       <fieldset>
+//         <legend class="question-text">${question.text}</legend>
+//           ${answers}
+//           <button type="submit">Submit</button>
+//       </fieldset>
+//     </form>
+//   `;
+// };
 
-const generateFeedbackHtml = function(feedback) {
-  return `
-    <p>
-      ${feedback}
-    </p>
-    <button class="continue js-continue">Continue</button>
-  `;
-};
+// const generateFeedbackHtml = function(feedback) {
+//   return `
+//     <p>
+//       ${feedback}
+//     </p>
+//     <button class="continue js-continue">Continue</button>
+//   `;
+// };
 
 // // Render function - uses `store` object to construct entire page every time it's run
 // // ===============
@@ -306,7 +355,7 @@ const generateFeedbackHtml = function(feedback) {
 //   let html;
 //   hideAll();
 
-const question = getCurrentQuestion();
+const question = Question.getCurrentQuestion();
 const { feedback } = store; //object destructuring = const feedback = store.feedback; 
 const { current, total } = getProgress();
 
