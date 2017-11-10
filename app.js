@@ -175,7 +175,7 @@ const render = function() {
   hideAll();
 
   const question = getCurrentQuestion();
-  const { feedback } = store; 
+  const { feedback } = store; //object destructuring = const feedback = store.feedback; 
   const { current, total } = getProgress();
 
   $('.js-score').html(`<span>Score: ${getScore()}</span>`);
