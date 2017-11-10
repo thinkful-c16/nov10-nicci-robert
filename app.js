@@ -3,6 +3,7 @@
 
 const API = {
   BASE_API_URL: 'https://opentdb.com', //line 9
+  //const BASE_API_URL = 'https://opentdb.com';
   buildTokenUrl : function() {
     return new URL(this.BASE_API_URL + '/api_token.php');
   }, //line 54
@@ -14,13 +15,58 @@ const API = {
     if (store.sessionToken) {
       url.searchParams.set('token', store.sessionToken);
     }
-  
+
     queryKeys.forEach(key => url.searchParams.set(key, query[key]));
     return url;
   } //line 53
 };
 
-//const BASE_API_URL = 'https://opentdb.com';
+const PAGE = {
+
+// Render function - uses `store` object to construct entire page every time it's run
+// ===============
+  render: function() {
+    console.log('Inside the render function.');
+    hideAll();
+
+    const question = getCurrentQuestion();
+    const { feedback } = store; 
+    const { current, total } = getProgress();
+
+    $('.js-score').html(`<span>Score: ${getScore()}</span>`);
+    $('.js-progress').html(`<span>Question ${current} of ${total}`);
+
+    switch (store.page) {
+    case 'intro':
+      $('.js-intro').show();
+      break;
+      
+    case 'question':
+      this.html = generateQuestionHtml(question);
+      $('.js-question').html(this.html);
+      console.log(this.html);
+      $('.js-question').show();
+      $('.quiz-status').show();
+      break;
+
+    case 'answer':
+      this.html = generateFeedbackHtml(feedback);
+      $('.js-question-feedback').html(this.html);
+      $('.js-question-feedback').show();
+      $('.quiz-status').show();
+      break;
+
+    case 'outro':
+      $('.js-outro').show();
+      $('.quiz-status').show();
+      break;
+
+    default:
+      return;
+    }
+  }
+};
+
 const TOP_LEVEL_COMPONENTS = [
   'js-intro', 'js-question', 'js-question-feedback', 
   'js-outro', 'js-quiz-status'
@@ -168,47 +214,47 @@ const generateFeedbackHtml = function(feedback) {
   `;
 };
 
-// Render function - uses `store` object to construct entire page every time it's run
-// ===============
-const render = function() {
-  let html;
-  hideAll();
+// // Render function - uses `store` object to construct entire page every time it's run
+// // ===============
+// const render = function() {
+//   let html;
+//   hideAll();
 
-  const question = getCurrentQuestion();
-  const { feedback } = store; 
-  const { current, total } = getProgress();
+//   const question = getCurrentQuestion();
+//   const { feedback } = store; 
+//   const { current, total } = getProgress();
 
-  $('.js-score').html(`<span>Score: ${getScore()}</span>`);
-  $('.js-progress').html(`<span>Question ${current} of ${total}`);
+//   $('.js-score').html(`<span>Score: ${getScore()}</span>`);
+//   $('.js-progress').html(`<span>Question ${current} of ${total}`);
 
-  switch (store.page) {
-  case 'intro':
-    $('.js-intro').show();
-    break;
+//   switch (store.page) {
+//   case 'intro':
+//     $('.js-intro').show();
+//     break;
     
-  case 'question':
-    html = generateQuestionHtml(question);
-    $('.js-question').html(html);
-    $('.js-question').show();
-    $('.quiz-status').show();
-    break;
+//   case 'question':
+//     html = generateQuestionHtml(question);
+//     $('.js-question').html(html);
+//     $('.js-question').show();
+//     $('.quiz-status').show();
+//     break;
 
-  case 'answer':
-    html = generateFeedbackHtml(feedback);
-    $('.js-question-feedback').html(html);
-    $('.js-question-feedback').show();
-    $('.quiz-status').show();
-    break;
+//   case 'answer':
+//     html = generateFeedbackHtml(feedback);
+//     $('.js-question-feedback').html(html);
+//     $('.js-question-feedback').show();
+//     $('.quiz-status').show();
+//     break;
 
-  case 'outro':
-    $('.js-outro').show();
-    $('.quiz-status').show();
-    break;
+//   case 'outro':
+//     $('.js-outro').show();
+//     $('.quiz-status').show();
+//     break;
 
-  default:
-    return;
-  }
-};
+//   default:
+//     return;
+//   }
+// };
 
 // Event handler functions
 // =======================
@@ -218,7 +264,7 @@ const handleStartQuiz = function() {
   store.currentQuestionIndex = 0;
   const quantity = parseInt($('#js-question-quantity').find(':selected').val(), 10);
   fetchAndSeedQuestions(quantity, { type: 'multiple' }, () => {
-    render();
+    PAGE.render();
   });
 };
 
@@ -235,25 +281,25 @@ const handleSubmitAnswer = function(e) {
   }
 
   store.page = 'answer';
-  render();
+  PAGE.render();
 };
 
 const handleNextQuestion = function() {
   if (store.currentQuestionIndex === QUESTIONS.length - 1) {
     store.page = 'outro';
-    render();
+    PAGE.render();
     return;
   }
 
   store.currentQuestionIndex++;
   store.page = 'question';
-  render();
+  PAGE.render();
 };
 
 // On DOM Ready, run render() and add event listeners
 $(() => {
   // Run first render
-  render();
+  PAGE.render();
 
   // Fetch session token, enable Start button when complete
   fetchToken(() => {
