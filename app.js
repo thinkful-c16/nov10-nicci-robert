@@ -2,11 +2,26 @@
 /*global $*/
 
 const API = {
+  fetchToken: function(callback) {
+    if (sessionToken) {
+      return callback();
+    }
+    const url = API.buildTokenUrl();
+    url.searchParams.set('command', 'request');
+
+    $.getJSON(url, res => {
+      sessionToken = res.token;
+      callback();
+    }, err => console.log(err));
+  },
+
   BASE_API_URL: 'https://opentdb.com', //line 9
   //const BASE_API_URL = 'https://opentdb.com';
+
   buildTokenUrl : function() {
     return new URL(this.BASE_API_URL + '/api_token.php');
   }, //line 54
+
   buildBaseUrl: function(amt = 10, query = {}) {
     const url = new URL(this.BASE_API_URL + '/api.php');
     const queryKeys = Object.keys(query);
@@ -22,7 +37,6 @@ const API = {
 };
 
 const PAGE = {
-
 // Render function - uses `store` object to construct entire page every time it's run
 // ===============
   render: function() {
@@ -67,6 +81,32 @@ const PAGE = {
   }
 };
 
+const Question = {
+  fetchQuestions: function(amt, query, callback) {
+    $.getJSON(API.buildBaseUrl(amt, query), callback, err => console.log(err.message));
+  },
+  
+  seedQuestions: function(questions) {
+    QUESTIONS.length = 0;
+    questions.forEach(q => QUESTIONS.push(this.createQuestion(q)));
+  },
+  
+  fetchAndSeedQuestions: function(amt, query, callback) {
+    this.fetchQuestions(amt, query, res => {
+      this.seedQuestions(res.results);
+      callback();
+    });
+  },
+  
+  createQuestion: function(question) {
+    return {
+      text: question.question,
+      answers: [ ...question.incorrect_answers, question.correct_answer ],
+      correctAnswer: question.correct_answer
+    };
+  }
+};
+
 const EventHandler = {
   // Event handler functions
   // =======================
@@ -76,7 +116,7 @@ const EventHandler = {
     store.page = 'question';
     store.currentQuestionIndex = 0;
     const quantity = parseInt($('#js-question-quantity').find(':selected').val(), 10);
-    fetchAndSeedQuestions(quantity, { type: 'multiple' }, () => {
+    Question.fetchAndSeedQuestions(quantity, { type: 'multiple' }, () => {
       PAGE.render();
     });
   },
@@ -158,43 +198,44 @@ const hideAll = function() {
 //   return new URL(API.BASE_API_URL + '/api_token.php');
 // };
 
-const fetchToken = function(callback) {
-  if (sessionToken) {
-    return callback();
-  }
+// const fetchToken = function(callback) {
+//   if (sessionToken) {
+//     return callback();
+//   }
 
-  const url = API.buildTokenUrl();
-  url.searchParams.set('command', 'request');
+//   const url = API.buildTokenUrl();
+  
+//   url.searchParams.set('command', 'request');
 
-  $.getJSON(url, res => {
-    sessionToken = res.token;
-    callback();
-  }, err => console.log(err));
-};
+//   $.getJSON(url, res => {
+//     sessionToken = res.token;
+//     callback();
+//   }, err => console.log(err));
+// };
 
-const fetchQuestions = function(amt, query, callback) {
-  $.getJSON(API.buildBaseUrl(amt, query), callback, err => console.log(err.message));
-};
+// const fetchQuestions = function(amt, query, callback) {
+//   $.getJSON(API.buildBaseUrl(amt, query), callback, err => console.log(err.message));
+// };
 
-const seedQuestions = function(questions) {
-  QUESTIONS.length = 0;
-  questions.forEach(q => QUESTIONS.push(createQuestion(q)));
-};
+// const seedQuestions = function(questions) {
+//   QUESTIONS.length = 0;
+//   questions.forEach(q => QUESTIONS.push(createQuestion(q)));
+// };
 
-const fetchAndSeedQuestions = function(amt, query, callback) {
-  fetchQuestions(amt, query, res => {
-    seedQuestions(res.results);
-    callback();
-  });
-};
+// const fetchAndSeedQuestions = function(amt, query, callback) {
+//   fetchQuestions(amt, query, res => {
+//     seedQuestions(res.results);
+//     callback();
+//   });
+// };
 
-const createQuestion = function(question) {
-  return {
-    text: question.question,
-    answers: [ ...question.incorrect_answers, question.correct_answer ],
-    correctAnswer: question.correct_answer
-  };
-};
+// const createQuestion = function(question) {
+//   return {
+//     text: question.question,
+//     answers: [ ...question.incorrect_answers, question.correct_answer ],
+//     correctAnswer: question.correct_answer
+//   };
+// };
 
 const getScore = function() {
   return store.userAnswers.reduce((accumulator, userAnswer, index) => {
@@ -347,7 +388,7 @@ $(() => {
   PAGE.render();
 
   // Fetch session token, enable Start button when complete
-  fetchToken(() => {
+  API.fetchToken(() => {
     $('.js-start').attr('disabled', false);
   });
 
