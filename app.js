@@ -3,6 +3,21 @@
 
 const API = {
   BASE_API_URL: 'https://opentdb.com', //line 9
+  buildTokenUrl : function() {
+    return new URL(this.BASE_API_URL + '/api_token.php');
+  }, //line 54
+  buildBaseUrl: function(amt = 10, query = {}) {
+    const url = new URL(this.BASE_API_URL + '/api.php');
+    const queryKeys = Object.keys(query);
+    url.searchParams.set('amount', amt);
+  
+    if (store.sessionToken) {
+      url.searchParams.set('token', store.sessionToken);
+    }
+  
+    queryKeys.forEach(key => url.searchParams.set(key, query[key]));
+    return url;
+  } //line 53
 };
 
 //const BASE_API_URL = 'https://opentdb.com';
@@ -35,29 +50,29 @@ const hideAll = function() {
   TOP_LEVEL_COMPONENTS.forEach(component => $(`.${component}`).hide());
 };
 
-const buildBaseUrl = function(amt = 10, query = {}) {
-  const url = new URL(API.BASE_API_URL + '/api.php');
-  const queryKeys = Object.keys(query);
-  url.searchParams.set('amount', amt);
+// const buildBaseUrl = function(amt = 10, query = {}) {
+//   const url = new URL(API.BASE_API_URL + '/api.php');
+//   const queryKeys = Object.keys(query);
+//   url.searchParams.set('amount', amt);
 
-  if (store.sessionToken) {
-    url.searchParams.set('token', store.sessionToken);
-  }
+//   if (store.sessionToken) {
+//     url.searchParams.set('token', store.sessionToken);
+//   }
 
-  queryKeys.forEach(key => url.searchParams.set(key, query[key]));
-  return url;
-};
+//   queryKeys.forEach(key => url.searchParams.set(key, query[key]));
+//   return url;
+// };
 
-const buildTokenUrl = function() {
-  return new URL(API.BASE_API_URL + '/api_token.php');
-};
+// const buildTokenUrl = function() {
+//   return new URL(API.BASE_API_URL + '/api_token.php');
+// };
 
 const fetchToken = function(callback) {
   if (sessionToken) {
     return callback();
   }
 
-  const url = buildTokenUrl();
+  const url = API.buildTokenUrl();
   url.searchParams.set('command', 'request');
 
   $.getJSON(url, res => {
@@ -67,7 +82,7 @@ const fetchToken = function(callback) {
 };
 
 const fetchQuestions = function(amt, query, callback) {
-  $.getJSON(buildBaseUrl(amt, query), callback, err => console.log(err.message));
+  $.getJSON(API.buildBaseUrl(amt, query), callback, err => console.log(err.message));
 };
 
 const seedQuestions = function(questions) {
