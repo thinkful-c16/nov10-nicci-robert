@@ -53,9 +53,9 @@ const PAGE = {
 
     const question = Question.getCurrentQuestion();
     const { feedback } = store; 
-    const { current, total } = getProgress();
+    const { current, total } = STORE.getProgress();
 
-    $('.js-score').html(`<span>Score: ${getScore()}</span>`);
+    $('.js-score').html(`<span>Score: ${STORE.getScore()}</span>`);
     $('.js-progress').html(`<span>Question ${current} of ${total}`);
 
     switch (store.page) {
@@ -161,7 +161,7 @@ const EventHandler = {
   // =======================
 
   handleStartQuiz: function() {
-    store = getInitialStore();
+    store = STORE.getInitialStore();
     store.page = 'question';
     store.currentQuestionIndex = 0;
     const quantity = parseInt($('#js-question-quantity').find(':selected').val(), 10);
@@ -198,6 +198,38 @@ const EventHandler = {
   }
 };
 
+const STORE = {
+  getInitialStore: function(){
+    return {
+      page: 'intro',
+      currentQuestionIndex: null,
+      userAnswers: [],
+      feedback: null,
+      sessionToken,
+    };
+  }, 
+
+  getScore: function() {
+    return store.userAnswers.reduce((accumulator, userAnswer, index) => {
+      const question = Question.getQuestion(index);
+  
+      if (question.correctAnswer === userAnswer) {
+        return accumulator + 1;
+      } else {
+        return accumulator;
+      }
+    }, 0);
+  },
+  
+  getProgress: function() {
+    return {
+      current: store.currentQuestionIndex + 1,
+      total: QUESTIONS.length
+    };
+  }
+
+};
+
 
 
 
@@ -212,17 +244,17 @@ let QUESTIONS = [];
 // entire session
 let sessionToken;
 
-const getInitialStore = function(){
-  return {
-    page: 'intro',
-    currentQuestionIndex: null,
-    userAnswers: [],
-    feedback: null,
-    sessionToken,
-  };
-};
+// const getInitialStore = function(){
+//   return {
+//     page: 'intro',
+//     currentQuestionIndex: null,
+//     userAnswers: [],
+//     feedback: null,
+//     sessionToken,
+//   };
+// };
 
-let store = getInitialStore();
+let store = STORE.getInitialStore();
 
 // Helper functions
 // ===============
@@ -286,24 +318,24 @@ let store = getInitialStore();
 //   };
 // };
 
-const getScore = function() {
-  return store.userAnswers.reduce((accumulator, userAnswer, index) => {
-    const question = Question.getQuestion(index);
+// const getScore = function() {
+//   return store.userAnswers.reduce((accumulator, userAnswer, index) => {
+//     const question = Question.getQuestion(index);
 
-    if (question.correctAnswer === userAnswer) {
-      return accumulator + 1;
-    } else {
-      return accumulator;
-    }
-  }, 0);
-};
+//     if (question.correctAnswer === userAnswer) {
+//       return accumulator + 1;
+//     } else {
+//       return accumulator;
+//     }
+//   }, 0);
+// };
 
-const getProgress = function() {
-  return {
-    current: store.currentQuestionIndex + 1,
-    total: QUESTIONS.length
-  };
-};
+// const getProgress = function() {
+//   return {
+//     current: store.currentQuestionIndex + 1,
+//     total: QUESTIONS.length
+//   };
+// };
 
 // const getCurrentQuestion = function() {
 //   return QUESTIONS[store.currentQuestionIndex];
@@ -357,7 +389,7 @@ const getProgress = function() {
 
 const question = Question.getCurrentQuestion();
 const { feedback } = store; //object destructuring = const feedback = store.feedback; 
-const { current, total } = getProgress();
+const { current, total } = STORE.getProgress();
 
 //   $('.js-score').html(`<span>Score: ${getScore()}</span>`);
 //   $('.js-progress').html(`<span>Question ${current} of ${total}`);
