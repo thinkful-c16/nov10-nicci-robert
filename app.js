@@ -265,9 +265,9 @@ const generateFeedbackHtml = function(feedback) {
 //   let html;
 //   hideAll();
 
-//   const question = getCurrentQuestion();
-//   const { feedback } = store; 
-//   const { current, total } = getProgress();
+const question = getCurrentQuestion();
+const { feedback } = store; //object destructuring = const feedback = store.feedback; 
+const { current, total } = getProgress();
 
 //   $('.js-score').html(`<span>Score: ${getScore()}</span>`);
 //   $('.js-progress').html(`<span>Question ${current} of ${total}`);
